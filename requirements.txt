@@ -1,0 +1,3 @@
+# Dependencies for Encoder.py and Decoder.py
+Pillow
+bitarray
