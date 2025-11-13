@@ -132,7 +132,7 @@ def shiftPixels(arrayOfBits, IMAGE, IMAGE_path):
                     else:
                         # Saves the image
                         path = Path(IMAGE_path)
-                        save_path = path.parent / f"{path.name}_enc"
+                        save_path = path.parent / f"enc_{path.name}"
                         IMAGE.save(save_path)
                         print("Image is saved as:", save_path)
                         return

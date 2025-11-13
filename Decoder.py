@@ -68,8 +68,6 @@ def decode(IMAGE):
                         for character in rgb:
                             lsb.append(character)
 
-                        print("LSB:", lsb)
-
                         # Takes the last bit of the lsb array and adds it to the decoded bits
                         bits.append(lsb[-1]) 
                         
@@ -83,9 +81,7 @@ def decode(IMAGE):
 def binaryToText(bits):
     # Adds spacing every 8 bit to split into bytes
     full_bytes = [''.join(bits[i:i+8]) for i in range(0, len(bits) - (len(bits) % 8), 8)]
-
-    print(full_bytes)  
-
+    
     # Converts bytes into characters
     text = ''.join(chr(int(b, 2)) for b in full_bytes)
     print(text)
