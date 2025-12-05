@@ -1,6 +1,7 @@
 from tkinter import Tk, filedialog
 from pathlib import Path
 from PIL import Image
+import base64
 
 def main():
     # User chooses their file (The image choosing logic is irrelevant, dont waste your time trying to understand it)
@@ -23,7 +24,7 @@ def openImage():
     # Opens file dialoge
     IMAGE = filedialog.askopenfilename(
         title="Choose an image",
-        filetypes=[("Images", "*.png *.jpg *.jpeg *.bmp"), ("All files", "*.*")]
+        filetypes=[("Images", "*.png *.jpg *.jpeg *.bmp *.webp"), ("All files", "*.*")]
     )
 
     if IMAGE:
@@ -45,46 +46,111 @@ def decode(IMAGE):
 
     #Initalize RGB value count
     currentRGBValue = 0
+    
+    count = 0
 
-    #Nested for loop that goes through every pixel (same logic is seen in Encoder)
+    extentionLength = 0
+
+    filenameDecoded = False
+    extentionLengthDecoded = False
+
+    
+
     for i in range(dimensions[0]):
         for j in range(dimensions[1]):
-            # For loops 3 times because there are 3 RGB values to be decoded
             for n in range(3):
-                # Grabs the RGB values of the current pixel
                 RGB = pixel[i, j]
+                if count < 8:     
+                    # Placeholder array to hold the decoded bits so they can be added to the bit array
+                    lsb = [] 
 
-                # Placeholder array to hold the decoded bits so they can be added to the bit array
-                lsb = [] 
+                    #Grabs the binary value of the current RGB value
+                    rgb = bin(RGB[currentRGBValue])
 
-                #Grabs the binary value of the current RGB value
-                rgb = bin(RGB[currentRGBValue])
+                    #Goes through every bit in the binary value of the current RGB value and append to the lsb array
+                    for character in rgb:
+                        lsb.append(character)
 
-                # Looks for the null terminator, "If the length of bits is greater than 8 and the last 8 elements are 0000000: Break,"
-                if len(bits) >= 8 and ''.join(bits[-8:]) == '00000000':
-                        break
-                else:
-                        #Goes through every bit in the binary value of the current RGB value and append to the lsb array
-                        for character in rgb:
-                            lsb.append(character)
+                    # Takes the last bit of the lsb array and adds it to the decoded bits
+                    bits.append(lsb[-1]) 
+                    
+                    count = count + 1
 
-                        # Takes the last bit of the lsb array and adds it to the decoded bits
-                        bits.append(lsb[-1]) 
-                        
-                        #Increments currentRGBvalue by 1, and also makes sure it stays between 0, 1 and 2, 0 = R, 1 = G, 2 = B
-                        currentRGBValue = (currentRGBValue + 1) % 3  
+                    #Increments currentRGBvalue by 1, and also makes sure it stays between 0, 1 and 2, 0 = R, 1 = G, 2 = B
+                    currentRGBValue = (currentRGBValue + 1) % 3 
+
+                elif count == 8:
+                    extentionLength = ''.join(bits)
+                    extentionLength = int(extentionLength, 2) * 8
+                    bits = []
+                    extentionLengthDecoded = True
+                
+                if 8 <= count and count < extentionLength + 8 and extentionLengthDecoded == True and filenameDecoded == False:
+                    RGB = pixel[i, j]
+                    
+                    # Placeholder array to hold the decoded bits so they can be added to the bit array
+                    lsb = [] 
+
+                    #Grabs the binary value of the current RGB value
+                    rgb = bin(RGB[currentRGBValue])
+
+                    #Goes through every bit in the binary value of the current RGB value and append to the lsb array
+                    for character in rgb:
+                        lsb.append(character)
+
+                    # Takes the last bit of the lsb array and adds it to the decoded bits
+                    bits.append(lsb[-1]) 
+                    
+                    count = count + 1
+
+                    #Increments currentRGBvalue by 1, and also makes sure it stays between 0, 1 and 2, 0 = R, 1 = G, 2 = B
+                    currentRGBValue = (currentRGBValue + 1) % 3 
+
+                elif count >= extentionLength + 8 and extentionLengthDecoded == True and filenameDecoded == False:
+                    # Adds spacing every 8 bit to split into bytes
+                    full_bytes = [''.join(bits[k:k+8]) for k in range(0, len(bits) - (len(bits) % 8), 8)]
     
-    # Once the null terminator is found, bits can be decoded back to characters
-    binaryToText(bits)    
+                    # Converts bytes into characters
+                    fileName = ''.join(chr(int(b, 2)) for b in full_bytes)
+                    
+                    print("Filename is:")
+                    print(fileName)
 
+                    filenameDecoded = True
 
-def binaryToText(bits):
+                    bits = []
+
+                if extentionLengthDecoded == True and filenameDecoded == True:
+                    # Placeholder array to hold the decoded bits so they can be added to the bit array
+                    lsb = [] 
+
+                    #Grabs the binary value of the current RGB value
+                    rgb = bin(RGB[currentRGBValue])
+
+                     # Looks for the null terminator, "If the length of bits is greater than 8 and the last 8 elements are 0000000: Break,"
+                    if len(bits) >= 8 and ''.join(bits[-8:]) == '00000000':
+                            remakeFile(bits,fileName)
+                            return None
+                    else:
+                            #Goes through every bit in the binary value of the current RGB value and append to the lsb array
+                            for character in rgb:
+                                lsb.append(character)
+            
+                            # Takes the last bit of the lsb array and adds it to the decoded bits
+                            bits.append(lsb[-1]) 
+                            
+                            #Increments currentRGBvalue by 1, and also makes sure it stays between 0, 1 and 2, 0 = R, 1 = G, 2 = B
+                            currentRGBValue = (currentRGBValue + 1) % 3 
+
+def remakeFile(bits,fileName):
     # Adds spacing every 8 bit to split into bytes
     full_bytes = [''.join(bits[i:i+8]) for i in range(0, len(bits) - (len(bits) % 8), 8)]
     
     # Converts bytes into characters
     text = ''.join(chr(int(b, 2)) for b in full_bytes)
-    print(text)
 
+    file_bytes = base64.b64decode(text)
+    with open(fileName, "wb") as f:
+        f.write(file_bytes)
 
 main()
