@@ -5,6 +5,7 @@ from pathlib import Path
 import base64
 import os
 import time
+from encryptdecrypt import encrypt
 
 def main():
     # Asks the user for a file to embed using the openFile() function
@@ -20,6 +21,18 @@ def main():
 
     # Gets the filename and extention of the given file
     filename = os.path.basename(FILE_path)
+
+    choice = input("Do you wish to use AES encryption? Y/N")
+
+    if choice == 'Y' or choice == 'y':
+        password = input("Enter your password: ")
+        message = encrypt(message, password)
+
+        filename = filename.encode()
+        filename = encrypt(filename, password)
+        filename = base64.b64encode(filename).decode()
+    else:
+        pass    
 
     # Converts the file content to base64 (This makes it MUCH easier to handle, as raw file contents are tricky), 
     # the .decode at the end ensures that we get it as string

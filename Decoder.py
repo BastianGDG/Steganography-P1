@@ -2,6 +2,7 @@ from tkinter import Tk, filedialog
 from pathlib import Path
 from PIL import Image
 import base64
+from encryptdecrypt import decrypt
 
 def main():
     # User chooses their file (The image choosing logic is irrelevant, dont waste your time trying to understand it)
@@ -53,8 +54,6 @@ def decode(IMAGE):
 
     filenameDecoded = False
     extentionLengthDecoded = False
-
-    
 
     for i in range(dimensions[0]):
         for j in range(dimensions[1]):
@@ -112,9 +111,6 @@ def decode(IMAGE):
     
                     # Converts bytes into characters
                     fileName = ''.join(chr(int(b, 2)) for b in full_bytes)
-                    
-                    print("Filename is:")
-                    print(fileName)
 
                     filenameDecoded = True
 
@@ -143,6 +139,9 @@ def decode(IMAGE):
                             currentRGBValue = (currentRGBValue + 1) % 3 
 
 def remakeFile(bits,fileName):
+
+    password = input("Enter the password used (leave blank if none): ")
+
     # Adds spacing every 8 bit to split into bytes
     full_bytes = [''.join(bits[i:i+8]) for i in range(0, len(bits) - (len(bits) % 8), 8)]
     
@@ -150,7 +149,29 @@ def remakeFile(bits,fileName):
     text = ''.join(chr(int(b, 2)) for b in full_bytes)
 
     file_bytes = base64.b64decode(text)
-    with open(fileName, "wb") as f:
-        f.write(file_bytes)
+
+    if password:
+        try:
+            fileName = base64.b64decode(fileName)
+
+            file_bytes = decrypt(file_bytes, password)
+
+            fileName = decrypt(fileName, password)
+
+            with open(fileName, "wb") as f:
+                f.write(file_bytes)
+
+                                
+            print("Filename is:")
+            print(fileName)
+
+        except:
+            print("Wrong password!!!")
+    else:
+        with open(fileName, "wb") as f:
+            f.write(file_bytes)
+                                
+            print("Filename is:")
+            print(fileName)
 
 main()
