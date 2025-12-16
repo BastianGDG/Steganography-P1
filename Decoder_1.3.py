@@ -168,10 +168,13 @@ def remakeFile(bits,fileName):
         except:
             print("Wrong password!!!")
     else:
-        with open(fileName, "wb") as f:
-            f.write(file_bytes)
-                                
-            print("Filename is:")
-            print(fileName)
+        try:
+            with open(fileName, "wb") as f:
+                f.write(file_bytes)
+                                    
+                print("Filename is:")
+                print(fileName)
+        except:
+            print("Could not fetch any data :(")
 
 main()

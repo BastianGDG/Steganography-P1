@@ -22,7 +22,15 @@ def main():
     # Gets the filename and extention of the given file
     filename = os.path.basename(FILE_path)
 
-    choice = input("Do you wish to use AES encryption? Y/N")
+    # User chooses their file (The image choosing logic is irrelevant, dont waste your time trying to understand it)
+    IMAGE_path = openImage()
+    if IMAGE_path is None:
+        return
+
+    # Image object
+    IMAGE = Image.open(IMAGE_path)
+
+    choice = input("Do you wish to use AES encryption? Y/N: ")
 
     if choice == 'Y' or choice == 'y':
         password = input("Enter your password: ")
@@ -60,15 +68,7 @@ def main():
     extensionBits = ba_ext.to01()
 
     #Array to contain the bits from above, we dont want them in string form
-    arrayOfBits = []
-
-    # User chooses their file (The image choosing logic is irrelevant, dont waste your time trying to understand it)
-    IMAGE_path = openImage()
-    if IMAGE_path is None:
-        return
-
-    # Image object
-    IMAGE = Image.open(IMAGE_path)  
+    arrayOfBits = []  
 
     # Runs the stringToArray function, with the initialized variables
     stringToArray(arrayOfBits, messageBits, filenameBits, extensionBits, IMAGE, IMAGE_path)
@@ -108,7 +108,6 @@ def openImage():
         return None
 
 def stringToArray(arrayOfBits, messageBits, filenameBits, extensionBits, IMAGE, IMAGE_path):
-
     # This ensures that we always have 8 bits (1 byte) of space allocated to containing the filenameLength 
     # (Just the length, not the filename itself)
     # The reason we're doing this is because the decoder doesn't know when to stop looking for this number, unless we have a fixed value in both ends
